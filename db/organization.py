@@ -219,3 +219,16 @@ class OrgKarmaLog(models.Model):
     @property
     def district(self):
         return self.org.district
+
+
+class LaunchpadClgUserLink(models.Model):
+    id = models.CharField(primary_key=True, default=uuid.uuid4(), max_length=36)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='launchpad_clg_user_link_user')
+    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='launchpad_clg_user_link_clg')
+    created_by = models.ForeignKey(User, models.DO_NOTHING, db_column='created_by',
+                                   related_name='launchpad_clg_user_link_created_by')
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        managed = False
+        db_table = 'launchpad_clg_user_link'

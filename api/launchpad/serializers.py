@@ -1,9 +1,11 @@
+import uuid
+
 from django.db.models import Sum, Max, Prefetch, F, OuterRef, Subquery, IntegerField
 
 from rest_framework import serializers
 
 from db.user import User
-from db.organization import UserOrganizationLink, Organization
+from db.organization import UserOrganizationLink, Organization, LaunchpadClgUserLink, College
 from db.task import KarmaActivityLog
 
 
@@ -95,3 +97,24 @@ class CollegeDataSerializer(serializers.ModelSerializer):
             "level3", 
             "level4"
         )
+
+
+class AssignCollegeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = LaunchpadClgUserLink
+        fields = []
+
+    def create(self, validated_data):
+        validated_data['id'] = uuid.uuid4()
+        validated_data['user'] = self.context.get('user')
+        validated_data['college'] = self.context.get('college_ids')
+        validated_data['created_by'] = self.context.get('user')
+        # instance = [LaunchpadClgUserLink(
+        #     id=uuid.uuid4(),
+        #     college=college_id,
+        #     user=user,
+        #     created_by=user
+        # ) for college_id in college_ids]
+
+        return LaunchpadClgUserLink.objects.create(**validated_data)

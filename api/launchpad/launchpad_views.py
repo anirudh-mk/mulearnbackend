@@ -2,7 +2,10 @@ from django.db.models import Sum, Max, Prefetch, F, OuterRef, Subquery, IntegerF
 
 from rest_framework.views import APIView
 
-from .serializers import LaunchpadLeaderBoardSerializer, LaunchpadParticipantsSerializer, CollegeDataSerializer
+from utils.permission import JWTUtils, role_required
+from utils.types import RoleType
+from .serializers import LaunchpadLeaderBoardSerializer, LaunchpadParticipantsSerializer, CollegeDataSerializer, \
+    AssignCollegeSerializer
 from utils.response import CustomResponse
 from utils.utils import CommonUtils
 from db.user import User, UserRoleLink
@@ -175,6 +178,7 @@ class LaunchpadDetailsCount(APIView):
 
         return CustomResponse(response=level_counts).get_success_response()
 
+
 class CollegeData(APIView):
     def get(self, request):
         allowed_levels = [
@@ -229,3 +233,28 @@ class CollegeData(APIView):
         return CustomResponse().paginated_response(
             data=serializer.data, pagination=paginated_queryset.get("pagination")
         )
+
+
+class AssignCollegeAPI(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        college_ids = request.data.get('college_ids')
+        user_instance = User.objects.filter(email=email).first()
+        serializer = AssignCollegeSerializer(
+            data=request.data,
+            context={
+                'user': user_instance,
+                'college_ids': college_ids
+            }
+        )
+        if serializer.is_valid():
+            serializer.save()
+
+            return CustomResponse(
+                general_message='College added successfully'
+            ).get_success_response()
+
+        return CustomResponse(
+            response=serializer.errors
+        ).get_failure_response()
+
